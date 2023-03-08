@@ -1,0 +1,36 @@
+server:
+  port: 8182
+
+spring:
+  datasource:
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: ENC(nWsZougPVTiMinl+XfZwLzIXIwcepJIbSEsGnDf//dTa/t4JkN6UrSeD986LkZWy)
+    username: ENC(WccufWtVLBrZKzVEIUd6KA==)
+    password: ENC(wBZaAMLiP19VPQtiaKY6Dw==)
+  sql:
+    init:
+      mode: never
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+    database: oracle
+    database-platform: org.hibernate.dialect.Oracle10gDialect
+  data.rest:
+    base-path: /api
+    detection-strategy: annotated
+
+logging:
+  level:
+    com.banking_system.api_server: debug
+    org.springframework.web.servlet: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+debug: false
+
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor
