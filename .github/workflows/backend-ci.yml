@@ -43,7 +43,7 @@ jobs:
       run: mkdir -p deploy
       
     - name: Check Location Jar file
-      run: ls
+      run: cd build || ls
         
     # Jar 파일 복사
     - name: Copy Jar
