@@ -65,7 +65,7 @@ jobs:
         first_ssh: |
           ls -la || echo $FIRST_INFO
         scp: |
-          './deploy/*' => ./
+          ./deploy => ./
         last_ssh: |
           echo $LAST_INFO || ls -la
       
