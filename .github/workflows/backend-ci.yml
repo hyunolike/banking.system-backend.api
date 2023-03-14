@@ -62,7 +62,7 @@ jobs:
         password: ${{ secrets.NCP_PASS }}
         port: ${{ secrets.NCP_PORT }}
         source: deploy.tar
-        target: /root/deploy
+        target: /
       
 #     - run: apt-get install sshpass
       
