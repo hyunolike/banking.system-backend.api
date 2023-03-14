@@ -48,6 +48,9 @@ jobs:
     - name: Copy Jar
       run: cp ./build/libs/*.jar ./deploy
       
+    - name: SCP 
+      run: scp -P ${{secrets.NCP_PORT}} ./deploy/*.jar ${{secrets.NCP_USERNAME}}@${{secrets.NCP_HOST}}:./deploy
+      
     # ssh 서버 접속
     - name: ssh scp ssh pipelines
       uses: cross-the-world/ssh-scp-ssh-pipelines@latest
