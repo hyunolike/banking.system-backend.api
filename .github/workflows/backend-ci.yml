@@ -48,27 +48,37 @@ jobs:
     - name: Copy Jar
       run: cp ./build/libs/*.jar ./deploy
       
-    - run: apt-get install sshpass
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.NCP_HOST }}
+        username: ${{ secrets.NCP_USERNAME }}
+        password: ${{ secrets.NCP_PASS }}
+        port: ${{ secrets.NCP_PORT }}
+        source: ./deploy
+        target: ./deploy
       
-    - name: SCP 
-      run: sshpass -p ${{secrets.NCP_PASS}} scp -P ${{secrets.NCP_PORT}} ./deploy/*.jar ${{secrets.NCP_USERNAME}}@${{secrets.NCP_HOST}}:./deploy
+#     - run: apt-get install sshpass
+      
+#     - name: SCP 
+#       run: sshpass -p ${{secrets.NCP_PASS}} scp -P ${{secrets.NCP_PORT}} ./deploy/*.jar ${{secrets.NCP_USERNAME}}@${{secrets.NCP_HOST}}:./deploy
       
     # ssh 서버 접속
-    - name: ssh scp ssh pipelines
-      uses: cross-the-world/ssh-scp-ssh-pipelines@latest
-      env:
-        FIRST_INFO: "success connect naver cloud"
-        LAST_INFO: "success scp naver cloud"
-      with:
-        host: ${{secrets.NCP_HOST}}
-        user: ${{secrets.NCP_USERNAME}}
-        pass: ${{secrets.NCP_PASS}}
-        port: ${{secrets.NCP_PORT}}
-        connect_timeout: 30s
-        first_ssh: |
-          ls -la || echo $FIRST_INFO
-        scp: ./build/libs/*.jar => ./deploy/
-        last_ssh: |
-          ls -la || echo $LAST_INFO 
+#     - name: ssh scp ssh pipelines
+#       uses: cross-the-world/ssh-scp-ssh-pipelines@latest
+#       env:
+#         FIRST_INFO: "success connect naver cloud"
+#         LAST_INFO: "success scp naver cloud"
+#       with:
+#         host: ${{secrets.NCP_HOST}}
+#         user: ${{secrets.NCP_USERNAME}}
+#         pass: ${{secrets.NCP_PASS}}
+#         port: ${{secrets.NCP_PORT}}
+#         connect_timeout: 20s
+#         first_ssh: |
+#           ls -la || echo $FIRST_INFO
+#         scp: ./build/libs/*.jar => ./deploy/
+#         last_ssh: |
+#           ls -la || echo $LAST_INFO 
       
     
