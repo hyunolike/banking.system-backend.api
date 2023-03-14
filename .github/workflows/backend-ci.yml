@@ -46,10 +46,6 @@ jobs:
     - name: Copy Jar
       run: cp ./build/libs/*.jar ./deploy
       
-    - name: Make zip file
-      run: zip -r ./coinTalk.zip ./deploy
-      shell: bash
-      
     # ssh 서버 접속
     - name: ssh scp ssh pipelines
       uses: cross-the-world/ssh-scp-ssh-pipelines@latest
@@ -61,11 +57,11 @@ jobs:
         user: ${{secrets.NCP_USERNAME}}
         pass: ${{secrets.NCP_PASS}}
         port: ${{secrets.NCP_PORT}}
-        connect_timeout: 10s
+        connect_timeout: 30s
         first_ssh: |
           ls -la || echo $FIRST_INFO
         scp: |
-          ./deploy => ./
+          ./deploy/*.jar => ./
         last_ssh: |
           echo $LAST_INFO || ls -la
       
