@@ -62,8 +62,8 @@ jobs:
         password: ${{ secrets.NCP_PASS }}
         port: ${{ secrets.NCP_PORT }}
         source: ./deploy/*.jar
-        target: /
-      
+        target: ./deploy/
+        strip_components: 1
 #     - run: apt-get install sshpass
       
 #     - name: SCP 
