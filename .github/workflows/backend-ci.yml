@@ -41,11 +41,8 @@ jobs:
      # 디렉토리 생성
     - name: Make Directory
       run: mkdir -p deploy
-      
-    - run: cd ./build 
-      
-    - name: Check Jar file
-      run: ls -al
+
+    - run: cd ./build && ls -al
         
     # Jar 파일 복사
     - name: Copy Jar
