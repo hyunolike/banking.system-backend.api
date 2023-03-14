@@ -42,9 +42,10 @@ jobs:
     - name: Make Directory
       run: mkdir -p deploy
       
-    - name: Check Location Jar file
-      run: |
-        cd ./build || ls -al
+    - run: cd ./build 
+      
+    - name: Check Jar file
+      run: ls -al
         
     # Jar 파일 복사
     - name: Copy Jar
