@@ -48,8 +48,10 @@ jobs:
     - name: Copy Jar
       run: cp ./build/libs/*.jar ./deploy
       
+    - run: apt-get install sshpass
+      
     - name: SCP 
-      run: scp -P ${{secrets.NCP_PORT}} ./deploy/*.jar ${{secrets.NCP_USERNAME}}@${{secrets.NCP_HOST}}:./deploy
+      run: sshpass -p ${{secrets.NCP_PASS}} scp -P ${{secrets.NCP_PORT}} ./deploy/*.jar ${{secrets.NCP_USERNAME}}@${{secrets.NCP_HOST}}:./deploy
       
     # ssh 서버 접속
     - name: ssh scp ssh pipelines
