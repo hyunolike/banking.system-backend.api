@@ -37,3 +37,29 @@ jobs:
     
     - name: Build with Gradle
       run: ./gradlew clean build
+      
+     # 디렉토리 생성
+    - name: Make Directory
+      run: mkdir -p deploy
+        
+    # Jar 파일 복사
+    - name: Copy Jar
+      run: cp ./build/libs/*.jar ./deploy
+      
+    - name: Make zip file
+      run: zip -r ./coinTalk.zip ./deploy
+      shell: bash
+      
+    # ssh 서버 접속
+    - name: ssh scp ssh pipelines
+      uses: cross-the-world/ssh-scp-ssh-pipelines@latest
+      with:
+        host: ${{NCP_HOST}}
+        user: ${{NCP_USERNAME}}
+        pass: ${{NCP_PASS}}
+        port: ${{NCP_PORT}}
+        connect_timeout: 10s
+        scp: |
+          './deploy/*' => /root/
+      
+    
