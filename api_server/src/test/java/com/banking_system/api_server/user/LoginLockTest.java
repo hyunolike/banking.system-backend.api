@@ -4,6 +4,8 @@ import com.banking_system.api_server.common.error.BusinessException;
 import com.banking_system.api_server.common.error.ErrorCode;
 import com.banking_system.api_server.user.command.application.UserDtos;
 import com.banking_system.api_server.user.command.application.UserService;
+import com.banking_system.api_server.user.command.domain.User;
+import com.banking_system.api_server.user.command.domain.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,15 @@ class LoginLockTest {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private int failureCountOf(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getFailedLoginCount)
+                .orElseThrow(() -> new AssertionError("사용자를 찾을 수 없습니다: " + email));
+    }
+
     private String signUpAndGetEmail() {
         String email = UUID.randomUUID() + "@banking.test";
         userService.signUp(new UserDtos.SignUpRequest("테스터", email, PASSWORD));
@@ -48,9 +59,13 @@ class LoginLockTest {
         String email = signUpAndGetEmail();
 
         assertThat(loginExpectingFailure(email, "wrong-1")).isEqualTo(ErrorCode.LOGIN_FAILED);
+        assertThat(failureCountOf(email)).isEqualTo(1);
         assertThat(loginExpectingFailure(email, "wrong-2")).isEqualTo(ErrorCode.LOGIN_FAILED);
+        assertThat(failureCountOf(email)).isEqualTo(2);
         // 3회째에 잠기지만, 이 호출 자체는 비밀번호가 틀린 것이므로 LOGIN_FAILED 다.
         assertThat(loginExpectingFailure(email, "wrong-3")).isEqualTo(ErrorCode.LOGIN_FAILED);
+        // 잠금이 걸리면서 카운터는 0 으로 되감긴다. 잠금 해제 후 한 번 더 틀리면 바로 다시 잠긴다.
+        assertThat(failureCountOf(email)).isZero();
 
         // 잠긴 뒤에는 비밀번호가 맞아도 거부된다.
         assertThat(loginExpectingFailure(email, PASSWORD)).isEqualTo(ErrorCode.ACCOUNT_LOCKED);
@@ -63,7 +78,10 @@ class LoginLockTest {
 
         loginExpectingFailure(email, "wrong-1");
         loginExpectingFailure(email, "wrong-2");
+        assertThat(failureCountOf(email)).isEqualTo(2);
+
         assertThat(userService.login(new UserDtos.LoginRequest(email, PASSWORD)).accessToken()).isNotBlank();
+        assertThat(failureCountOf(email)).isZero();
 
         // 카운터가 0 으로 돌아갔으므로 두 번 더 틀려도 아직 잠기지 않는다.
         loginExpectingFailure(email, "wrong-3");
