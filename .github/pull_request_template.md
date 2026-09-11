@@ -8,7 +8,7 @@
 
 ## ✅ 체크리스트
 
-- [ ] `./gradlew build` 가 로컬에서 통과한다
+- [ ] `cd api_server && ./gradlew build` 가 로컬에서 통과한다
 - [ ] 변경한 동작에 대한 테스트를 추가했다
 - [ ] 새 설정값(환경변수)을 추가했다면 `application.yml` 기본값과 README 표에 반영했다
 - [ ] DB 스키마를 바꿨다면 `schema.sql` 과 `db/migration/` 스크립트를 **모두** 갱신했다
