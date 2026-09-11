@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: feature 이슈 템플릿입니다
-title: "[ALL/FE/BE]"
+title: "[BE]"
 labels: ''
 assignees: hyunolike
 
@@ -10,3 +10,12 @@ assignees: hyunolike
 ## 기능 상세
 - [ ] 기능을 상세히
 - [ ] 적는 곳
+
+### 배경
+- 왜 필요한지 적습니다.
+
+### 고려사항
+- [ ] DB 스키마 변경이 필요한가 (마이그레이션 스크립트 필요)
+- [ ] 새 설정값(환경변수)이 필요한가
+- [ ] 인증·인가 규칙에 영향이 있는가
+- [ ] 스케줄러 서버 변경이 함께 필요한가
