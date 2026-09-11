@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------------------
+# 로컬 통합 실행용. 운영 배포는 GitHub Actions + run.sh 를 사용한다.
+#
+#   1) .env 파일 작성 (아래 필수 값)
+#   2) docker compose up -d --build
+#   3) DB 최초 1회: api_server/src/main/resources/schema.sql 실행
+#
+# .env 예시 (저장소에 커밋하지 않는다)
+#   ORACLE_PASSWORD=change-me
+#   DB_USERNAME=hyunho
+#   DB_PASSWORD=change-me
+#   JWT_SECRET=<openssl rand -base64 48>
+#   INTERNAL_API_KEY=<openssl rand -hex 32>
+# ---------------------------------------------------------------------------
+services:
+  oracle:
+    # Oracle 공식 XE 이미지는 로그인이 필요해 커뮤니티 배포판을 쓴다.
+    image: gvenzl/oracle-free:23-slim
+    container_name: banking-oracle
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:?ORACLE_PASSWORD 를 .env 에 설정하세요}
+      APP_USER: ${DB_USERNAME:?DB_USERNAME 을 .env 에 설정하세요}
+      APP_USER_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD 를 .env 에 설정하세요}
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  api:
+    build:
+      context: ./api_server
+    container_name: banking-api
+    depends_on:
+      oracle:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:oracle:thin:@oracle:1521/FREEPDB1
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET 을 .env 에 설정하세요}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?INTERNAL_API_KEY 를 .env 에 설정하세요}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "8182:8182"
+    restart: unless-stopped
+
+volumes:
+  oracle-data:

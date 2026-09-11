@@ -15,6 +15,9 @@ CREATE TABLE member
     -- BCrypt 해시는 60자다. 알고리즘 교체 여지를 두고 100 으로 잡는다.
     password   VARCHAR2(100) NOT NULL,
     created_at TIMESTAMP    DEFAULT SYSTIMESTAMP NOT NULL,
+    -- 연속 로그인 실패 횟수와 잠금 만료 시각
+    failed_login_count NUMBER(3) DEFAULT 0 NOT NULL,
+    locked_until       TIMESTAMP,
     CONSTRAINT pk_member PRIMARY KEY (user_id),
     CONSTRAINT uk_member_email UNIQUE (email)
 );
@@ -31,6 +34,37 @@ COMMENT ON COLUMN member.name IS '유저 이름';
 COMMENT ON COLUMN member.email IS '로그인 아이디';
 COMMENT ON COLUMN member.password IS '로그인 비밀번호(BCrypt 해시)';
 COMMENT ON COLUMN member.created_at IS '가입 시각';
+COMMENT ON COLUMN member.failed_login_count IS '연속 로그인 실패 횟수';
+COMMENT ON COLUMN member.locked_until IS '로그인 잠금 만료 시각(NULL 이면 잠기지 않음)';
+
+-- ---------------------------------------------------------------------------
+-- password_reset_token : 비밀번호 재설정 일회용 토큰
+-- 토큰 원문은 저장하지 않고 SHA-256 해시만 보관한다.
+-- ---------------------------------------------------------------------------
+CREATE TABLE password_reset_token
+(
+    token_id   NUMBER(19)    NOT NULL,
+    user_id    NUMBER(19)    NOT NULL,
+    token_hash VARCHAR2(64)  NOT NULL,
+    expires_at TIMESTAMP     NOT NULL,
+    used_at    TIMESTAMP,
+    created_at TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
+    CONSTRAINT pk_password_reset_token PRIMARY KEY (token_id),
+    CONSTRAINT uk_password_reset_token_hash UNIQUE (token_hash),
+    CONSTRAINT fk_password_reset_token_member FOREIGN KEY (user_id) REFERENCES member (user_id)
+);
+
+CREATE INDEX ix_password_reset_token_user ON password_reset_token (user_id);
+
+CREATE SEQUENCE password_reset_token_seq
+    START WITH 1
+    INCREMENT BY 1
+    NOMAXVALUE
+    NOCYCLE;
+
+COMMENT ON TABLE password_reset_token IS '비밀번호 재설정 일회용 토큰';
+COMMENT ON COLUMN password_reset_token.token_hash IS '토큰 원문의 SHA-256 해시(hex)';
+COMMENT ON COLUMN password_reset_token.used_at IS '사용 시각(NULL 이면 미사용)';
 
 -- ---------------------------------------------------------------------------
 -- account : 계좌

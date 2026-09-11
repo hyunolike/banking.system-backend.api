@@ -50,7 +50,9 @@ com.banking_system.api_server
 |---|---|---|---|
 | POST | `/api/auth/signup` | – | 회원가입 |
 | POST | `/api/auth/login` | – | 로그인, 액세스 토큰 발급 |
+| POST | `/api/auth/password-reset` | – | 일회용 토큰으로 비밀번호 재설정 |
 | GET | `/api/users/me` | Bearer | 내 정보 |
+| PATCH | `/api/users/me/password` | Bearer | 비밀번호 변경 |
 | POST | `/api/accounts` | Bearer | 계좌 개설 |
 | GET | `/api/accounts` | Bearer | 내 계좌 목록 |
 | GET | `/api/accounts/{no}` | Bearer | 계좌 상세 |
@@ -60,6 +62,7 @@ com.banking_system.api_server
 | GET | `/api/accounts/{no}/transactions` | Bearer | 거래내역 (`page`, `size`) |
 | GET | `/api/friends` · POST · DELETE `/{id}` | Bearer | 이체 즐겨찾기 |
 | GET | `/api/internal/stats/snapshot` | `X-Internal-Api-Key` | 현황 스냅샷 (스케줄러 전용) |
+| POST | `/api/internal/users/password-reset-tokens` | `X-Internal-Api-Key` | 재설정 토큰 발급 (운영자 전용) |
 
 에러 응답은 모두 같은 형태입니다.
 
@@ -105,8 +108,15 @@ curl -X POST localhost:8182/api/accounts/1/transfers -H "Authorization: Bearer $
 | `JWT_SECRET` | ✅ | HS256 서명 키, **32바이트 이상** |
 | `INTERNAL_API_KEY` | ✅ | 스케줄러 서버와 공유하는 내부 API 키 |
 | `JWT_EXPIRATION` | | 토큰 만료 (기본 `1h`) |
+| `LOGIN_MAX_ATTEMPTS` | | 연속 실패 허용 횟수 (기본 `5`) |
+| `LOGIN_LOCK_DURATION` | | 잠금 시간 (기본 `15m`) |
+| `PASSWORD_RESET_TTL` | | 재설정 토큰 유효 기간 (기본 `30m`) |
+| `CORS_ALLOWED_ORIGINS` | | 쉼표 구분 오리진. **비우면 교차 출처 요청 전면 차단** |
 | `SERVER_PORT` | | 기본 `8182` |
 | `LOG_LEVEL` | | 기본 `info` |
+
+> ⚠️ 계정 잠금은 **계정 단위**라, 남의 이메일로 일부러 실패시켜 잠그는 공격이 가능합니다.
+> `LOGIN_MAX_ATTEMPTS` 를 지나치게 낮게 잡지 마세요.
 
 키 생성 예시:
 
@@ -133,7 +143,8 @@ cd api_server
 |---|---|
 | `src/main/resources/db/init/01-create-schema-owner.sql` | 스키마 소유 계정 생성 (DBA 1회 실행) |
 | `src/main/resources/schema.sql` | 신규 설치용 전체 DDL |
-| `src/main/resources/db/migration/V2__security_and_ledger.sql` | 기존 DB 업그레이드용 |
+| `src/main/resources/db/migration/V2__security_and_ledger.sql` | 기존 DB 업그레이드용 (보안·원장) |
+| `src/main/resources/db/migration/V3__password_reset_and_login_lock.sql` | 재설정 토큰·로그인 잠금 |
 
 `spring.jpa.hibernate.ddl-auto` 는 `none` 입니다. DDL 은 위 스크립트로만 적용합니다.
 
@@ -141,6 +152,25 @@ cd api_server
 > 기존 비밀번호는 평문으로 저장돼 있었고 BCrypt 로 역변환할 수 없습니다.
 > 마이그레이션 스크립트가 기존 해시를 로그인 불가 값으로 바꾸므로,
 > 적용 전에 전체 사용자에게 비밀번호 재설정을 안내해야 합니다.
+> **V2 와 V3 는 반드시 함께 적용하세요.** V3 가 만드는 재설정 토큰 경로가
+> 잠긴 사용자의 유일한 복구 수단입니다. 복구 절차는 V3 스크립트 하단 주석에 있습니다.
+
+## 5-1. Docker 로 실행
+
+```bash
+cat > .env <<'ENV'
+ORACLE_PASSWORD=change-me
+DB_USERNAME=hyunho
+DB_PASSWORD=change-me
+JWT_SECRET=$(openssl rand -base64 48)
+INTERNAL_API_KEY=$(openssl rand -hex 32)
+ENV
+
+docker compose up -d --build
+```
+
+Oracle 컨테이너가 healthy 가 된 뒤 api 가 올라옵니다.
+최초 1회 `schema.sql` 을 실행해 테이블을 만들어야 합니다.
 
 ## 6. 배포
 

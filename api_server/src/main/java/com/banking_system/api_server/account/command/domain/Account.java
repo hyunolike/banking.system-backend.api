@@ -88,10 +88,6 @@ public class Account {
         }
     }
 
-    public void rename(String newName) {
-        this.name = newName;
-    }
-
     private static void requirePositive(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) {
             throw new BusinessException(ErrorCode.INVALID_AMOUNT);

@@ -24,11 +24,6 @@ public class Password {
         return new Password(encoder.encode(rawPassword));
     }
 
-    /** 이미 해시된 값을 그대로 감쌀 때만 사용한다. */
-    public static Password ofEncoded(String encoded) {
-        return new Password(encoded);
-    }
-
     public boolean matches(String rawPassword, PasswordEncoder encoder) {
         return encoder.matches(rawPassword, this.encoded);
     }

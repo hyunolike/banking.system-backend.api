@@ -13,8 +13,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     List<Account> findAllByUserIdOrderByAccountNumberAsc(Long userId);
 
-    long countByUserId(Long userId);
-
     /**
      * 잔액 변경 전용 조회. {@code SELECT ... FOR UPDATE} 로 행을 잠가
      * 동시에 들어온 출금/이체가 잔액을 덮어쓰지 못하게 한다.

@@ -2,7 +2,7 @@
 spring:
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:banking-test;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:banking-test;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=10000
     username: sa
     password:
   jpa:
@@ -21,6 +21,14 @@ banking:
     issuer: banking-system
   internal:
     api-key: test-internal-api-key
+  security:
+    login:
+      max-attempts: 3
+      lock-duration: 15m
+    password-reset:
+      ttl: 30m
+  cors:
+    allowed-origins: https://app.example.test
 
 logging:
   level:

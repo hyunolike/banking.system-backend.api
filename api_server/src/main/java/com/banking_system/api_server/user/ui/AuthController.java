@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -29,8 +30,18 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @org.springframework.web.bind.annotation.ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.OK)
     public UserDtos.TokenResponse login(@Valid @RequestBody UserDtos.LoginRequest request) {
         return userService.login(request);
+    }
+
+    /**
+     * 운영자에게 받은 일회용 토큰으로 비밀번호를 재설정한다.
+     * 로그인할 수 없는 상태에서도 쓸 수 있어야 하므로 비인증 경로다.
+     */
+    @PostMapping("/password-reset")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void resetPassword(@Valid @RequestBody UserDtos.ResetPasswordRequest request) {
+        userService.resetPassword(request);
     }
 }

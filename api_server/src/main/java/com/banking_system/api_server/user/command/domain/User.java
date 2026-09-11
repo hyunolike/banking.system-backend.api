@@ -1,5 +1,7 @@
 package com.banking_system.api_server.user.command.domain;
 
+import com.banking_system.api_server.common.error.BusinessException;
+import com.banking_system.api_server.common.error.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -10,6 +12,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
@@ -41,6 +44,14 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /** 연속 로그인 실패 횟수. 로그인에 성공하면 0 으로 돌아간다. */
+    @Column(name = "failed_login_count", nullable = false)
+    private int failedLoginCount;
+
+    /** 이 시각까지 로그인이 차단된다. null 이면 잠기지 않은 상태. */
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
     protected User() {
     }
 
@@ -49,6 +60,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.createdAt = LocalDateTime.now();
+        this.failedLoginCount = 0;
     }
 
     public static User register(String name, String email, String rawPassword, PasswordEncoder encoder) {
@@ -59,8 +71,49 @@ public class User {
         return password.matches(rawPassword, encoder);
     }
 
+    /**
+     * 비밀번호를 교체한다. 기존과 같은 값으로는 바꿀 수 없다.
+     * 재설정이 끝나면 잠금도 함께 풀어 사용자가 바로 로그인할 수 있게 한다.
+     */
     public void changePassword(String rawPassword, PasswordEncoder encoder) {
+        if (password.matches(rawPassword, encoder)) {
+            throw new BusinessException(ErrorCode.PASSWORD_NOT_CHANGED);
+        }
         this.password = Password.encode(rawPassword, encoder);
+        unlock();
+    }
+
+    public boolean isLocked(LocalDateTime now) {
+        return lockedUntil != null && lockedUntil.isAfter(now);
+    }
+
+    public LocalDateTime getLockedUntil() {
+        return lockedUntil;
+    }
+
+    /**
+     * 로그인 실패를 기록하고, 임계치에 도달하면 계정을 잠근다.
+     *
+     * @return 이번 실패로 계정이 잠겼으면 true
+     */
+    public boolean recordLoginFailure(int maxAttempts, Duration lockDuration, LocalDateTime now) {
+        this.failedLoginCount++;
+        if (this.failedLoginCount >= maxAttempts) {
+            this.lockedUntil = now.plus(lockDuration);
+            // 잠금이 풀린 뒤 한 번 더 틀렸을 때 곧바로 다시 잠기도록 카운터를 초기화한다.
+            this.failedLoginCount = 0;
+            return true;
+        }
+        return false;
+    }
+
+    public void recordLoginSuccess() {
+        unlock();
+    }
+
+    private void unlock() {
+        this.failedLoginCount = 0;
+        this.lockedUntil = null;
     }
 
     public static String normalizeEmail(String email) {
@@ -81,5 +134,9 @@ public class User {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public int getFailedLoginCount() {
+        return failedLoginCount;
     }
 }

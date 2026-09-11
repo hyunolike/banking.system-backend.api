@@ -40,6 +40,17 @@ banking:
   internal:
     # 스케줄러 서버가 /api/internal/** 호출 시 사용하는 공유 키
     api-key: ${INTERNAL_API_KEY}
+  security:
+    login:
+      # 연속 실패 임계치와 잠금 시간. 잠금은 계정 단위라 악의적 잠금 유발이 가능하니
+      # 임계치를 너무 낮게 잡지 않는다.
+      max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
+      lock-duration: ${LOGIN_LOCK_DURATION:15m}
+    password-reset:
+      ttl: ${PASSWORD_RESET_TTL:30m}
+  cors:
+    # 비워두면 교차 출처 요청을 전부 차단한다. 예: https://app.example.com
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
 
 logging:
   level:

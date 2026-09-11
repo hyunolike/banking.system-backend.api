@@ -19,7 +19,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -127,6 +129,56 @@ class ApiSecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userCount").exists())
                 .andExpect(jsonPath("$.totalBalance").exists());
+    }
+
+    @Test
+    @DisplayName("허용 목록에 있는 오리진의 프리플라이트만 통과한다")
+    void corsPreflight() throws Exception {
+        mockMvc.perform(options("/api/accounts")
+                        .header(HttpHeaders.ORIGIN, "https://app.example.test")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "https://app.example.test"));
+
+        mockMvc.perform(options("/api/accounts")
+                        .header(HttpHeaders.ORIGIN, "https://evil.example.test")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 엔드포인트는 인증 없이 열려 있고, 잘못된 토큰은 거절한다")
+    void passwordResetIsPublicButValidated() throws Exception {
+        mockMvc.perform(post("/api/auth/password-reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("token", "not-a-real-token", "newPassword", "password1234"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("U005"));
+    }
+
+    @Test
+    @DisplayName("재설정 토큰 발급은 내부 API 키가 있어야 한다")
+    void issueResetTokenRequiresInternalKey() throws Exception {
+        String email = UUID.randomUUID() + "@banking.test";
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("name", "테스터", "email", email, "password", "password1234"))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/internal/users/password-reset-tokens")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("email", email))))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/internal/users/password-reset-tokens")
+                        .header(InternalApiKeyFilter.HEADER, "test-internal-api-key")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("email", email))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.expiresAt").isNotEmpty());
     }
 
     @Test

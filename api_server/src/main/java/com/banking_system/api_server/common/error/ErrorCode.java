@@ -18,6 +18,9 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "존재하지 않는 사용자입니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "U002", "이미 사용 중인 이메일입니다."),
     LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "U003", "이메일 또는 비밀번호가 올바르지 않습니다."),
+    ACCOUNT_LOCKED(HttpStatus.LOCKED, "U004", "로그인 시도가 너무 많아 계정이 잠겼습니다."),
+    INVALID_PASSWORD_RESET_TOKEN(HttpStatus.BAD_REQUEST, "U005", "재설정 토큰이 유효하지 않거나 만료되었습니다."),
+    PASSWORD_NOT_CHANGED(HttpStatus.BAD_REQUEST, "U006", "새 비밀번호가 기존 비밀번호와 같습니다."),
 
     // 계좌
     ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "A001", "존재하지 않는 계좌입니다."),
