@@ -16,7 +16,8 @@ set -euo pipefail
 
 APP_NAME="api_server"
 APP_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-JAR_PATH="$(ls -t "${APP_HOME}"/*.jar 2>/dev/null | head -n 1 || true)"
+# plain jar(Main-Class 없음)는 후보에서 제외한다. 섞여 들어와도 기동이 깨지지 않도록.
+JAR_PATH="$(ls -t "${APP_HOME}"/*.jar 2>/dev/null | grep -v -- '-plain\.jar$' | head -n 1 || true)"
 PID_FILE="${APP_HOME}/${APP_NAME}.pid"
 LOG_FILE="${APP_HOME}/${APP_NAME}.log"
 ENV_FILE="${APP_HOME}/.env"
