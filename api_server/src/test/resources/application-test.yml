@@ -1,0 +1,27 @@
+# 테스트는 외부 Oracle 에 의존하지 않는다. (이전에는 contextLoads 조차 운영 DB 를 찾았다.)
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:banking-test;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+  sql:
+    init:
+      mode: never
+
+banking:
+  jwt:
+    secret: test-secret-key-for-unit-tests-0123456789
+    expiration: 1h
+    issuer: banking-system
+  internal:
+    api-key: test-internal-api-key
+
+logging:
+  level:
+    com.banking_system.api_server: info
