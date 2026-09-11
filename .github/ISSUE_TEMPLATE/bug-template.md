@@ -1,14 +1,14 @@
 ---
 name: Bug template
 about: 버그 발생 시 사용하는 템플릿입니다
-title: "[ALL/FE/BE]"
+title: "[BE]"
 labels: ''
 assignees: hyunolike
 
 ---
 
 ## 버그 기능
-- 페이지나 기능을 적습니다.
+- 어떤 기능에서 발생했는지 적습니다. (인증 / 계좌 / 이체 / 거래내역 / 배포 등)
 
 ### 버그 상황 재연
 - 어떤 상황에서 버그가 발생하는지 적습니다.
@@ -18,3 +18,18 @@ assignees: hyunolike
 
 ### 현재 동작
 - 기대하던 동작에 반해 지금 문제가 되는 동작을 작성합니다.
+
+### 응답 / 로그
+- 에러 응답 본문을 붙입니다. `code` 값이 원인 파악의 출발점입니다.
+
+```json
+{ "code": "A003", "message": "잔액이 부족합니다.", "errors": [], "timestamp": "..." }
+```
+
+- 관련 서버 로그가 있다면 함께 붙입니다.
+
+### 실행 환경
+- 실행 방식: (로컬 `local` 프로파일 / Docker / NCP 배포)
+- DB: (H2 / Oracle)
+- 요청 경로와 메서드:
+- 인증 방식: (Bearer 토큰 / `X-Internal-Api-Key` / 없음)
