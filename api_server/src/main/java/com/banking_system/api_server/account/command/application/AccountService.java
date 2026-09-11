@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @Transactional(readOnly = true)
@@ -92,9 +92,7 @@ public class AccountService {
             throw new BusinessException(ErrorCode.SAME_ACCOUNT_TRANSFER);
         }
 
-        List<Long> lockOrder = List.of(fromAccountNumber, toAccountNumber).stream()
-                .sorted(Comparator.naturalOrder())
-                .toList();
+        List<Long> lockOrder = Stream.of(fromAccountNumber, toAccountNumber).sorted().toList();
         Account first = getAccountForUpdate(lockOrder.get(0));
         Account second = getAccountForUpdate(lockOrder.get(1));
 
